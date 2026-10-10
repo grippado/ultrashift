@@ -90,14 +90,14 @@ Orientação: **retrato**, decisão do MVP (ADR-001, ver seção 11). Pista na m
 **Máquina de estados (ponteiro dono)**
 
 ```
-IDLE --down--> PRESSED --(move > deadZone ou 120 ms)--> STEERING | BRAKING
-STEERING <--histerese--> BRAKING
+IDLE --down--> PRESSED --(move > deadZone ou 120 ms)--> STEERING
+STEERING <--histerese (só após steer ativo)--> BRAKING
 STEERING/BRAKING --up--> IDLE
 ```
 
-1. **PRESSED.** O ponto onde o dedo pousa vira a âncora (steer = 0). Decisão de eixo quando o deslocamento passa de `deadZone` (~3 mm) ou após 120 ms.
+1. **PRESSED.** O ponto onde o dedo pousa vira a âncora (steer = 0). Passando de `deadZone` (~3 mm) ou 120 ms, vai para STEERING (freio só é avaliado dali em diante).
 2. **STEERING.** `steer = clamp((x - anchorX) / steerRange, -1, 1)`, com `steerRange` ~12 mm, zona morta interna pequena, ganho único configurável e suavização leve (one-pole, tau ~40 ms). Ao soltar, o steer decai a 0 em ~80 ms.
-3. **BRAKING.** "Para trás" significa arrasto para **baixo** (em direção ao usuário). Entra se `dy > 1,5 * |dx|` e `dy > brakeStart` (~6 mm). Sai se `dy < ~3 mm` (histerese). Diagonais ambíguas mantêm o estado atual (sem flapping). Freio é binário/proporcional simples no v0, sem curva analógica. Durante o freio, o steer continua ativo com peso reduzido (x0,6). Arrasto para cima é ignorado.
+3. **BRAKING (leve, só depois do steer ativo).** "Para trás" significa arrasto para **baixo** (em direção ao usuário). O freio só pode entrar depois que o steer já estiver ativo (estado STEERING confirmado, dedo já passou da zona morta lateral), nunca direto de PRESSED. Isso evita freadas acidentais ao pousar o dedo. Entra se `dy > 1,5 * |dx|` e `dy > brakeStart` (~6 mm), com intensidade proporcional e **leve** (desaceleração suave, não trava): `brake = clamp((dy - brakeStart) / brakeRange, 0, 1) * brakeMax`, com `brakeMax` ~0,6 inicialmente. Sai se `dy < ~3 mm` (histerese). Diagonais ambíguas mantêm o estado atual. Durante o freio, o steer continua ativo com peso reduzido (x0,6). Arrasto para cima é ignorado.
 4. **Nitro (duplo toque).** Um "tap" é down+up com duração < 220 ms e deslocamento < ~2 mm. Dois taps com intervalo < 280 ms e distância < 40 px (tolerância configurável). Dispara no **segundo pointerdown** (latência mínima). O segundo toque pode seguir como arrasto, então o jogador começa a esterçar sem soltar. Só conta como tap se o dedo ficou dentro da zona morta, então arrastos reais nunca contam.
 5. **Steer sem dono durante os dois taps.** Aceito conscientemente: durante um duplo toque o steer fica em 0 por ~0,5 s. O segundo pointerdown vira a nova âncora, sem salto (interpolação de 0 em ~100 ms).
 6. **Multi-touch.** Um único ponteiro dono de steer/freio. Dedo secundário: tap = nitro imediato (atalho de duas mãos). Se o dono sobe e outro dedo está presente, re-ancora após 100 ms.
@@ -168,7 +168,7 @@ Regra: a pista fecha altura e curvatura em 0 para loop perfeito (checado por um 
 - Todo asset registrado em `ASSETS.md` (origem, autor, licença). Só original, CC0 ou CC-BY.
 - Se usar ferramentas de IA para arte/música: registrar fonte, conferir termos comerciais, ajustar manualmente.
 - Pré-lançamento: revisão de `ASSETS.md`, busca reversa de imagens, checagem do nome "Ultrashift" em INPI/EUIPO/USPTO e domínios.
-- Licença: ler a `LICENSE` atual do repo; código em licença permissiva (MIT/Apache-2.0) e arte/áudio em licença separada, documentada.
+- Licença: MIT para tudo (código, arte e áudio), por decisão do Gabriel. Conferir os termos da ferramenta de geração e registrar em `ASSETS.md`.
 
 ## 8. Marcos
 
@@ -236,20 +236,20 @@ Sem estimativas em dias. Cada marco tem critério de saída. Se o Gabriel inform
 | IP e marca ("Top Gear" no slogan; nome "Ultrashift" não checado) | Slogan só no README, `ASSETS.md`, checagem de marca antes de lançar |
 | Burnout em projeto solo | Marcos curtos, sempre com algo jogável e link no ar |
 
-## 11. Decisões em aberto para o Gabriel
+## 11. Decisões
 
-Decisões já tomadas neste plano (podem ser revertidas): retrato, Canvas 2D sem Pixi, freio = arrasto para baixo, 3 cargas fixas de nitro, 1 pista e 3 IAs, PWA no Vercel como único canal do MVP.
+**Confirmadas pelo Gabriel**
+1. **Orientação:** retrato, jogo de uma mão.
+2. **Freio:** arrasto para baixo, bem leve, só depois que o steer está ativo (seção 4, item 3).
+3. **Aparelhos de teste:** iPhone 17, iPad mini 7, Galaxy S26 Ultra. O M1 valida gestos nos três (incluindo iPad mini em retrato e telas grandes do S26 Ultra, onde os limiares em mm importam).
+4. **Arte e áudio:** gerados via ChatGPT a partir de prompts escritos aqui, em `docs/ASSET_PROMPTS.md`. Valem as regras de IA da seção 7 (registrar em `ASSETS.md`, conferir termos comerciais).
+5. **Prazo/horas:** N/A, o plano segue por critérios de saída.
+6. **Licença:** tudo MIT (código, arte e áudio). Atualizar `ASSETS.md` e conferir que os termos da ferramenta de geração permitem MIT.
 
-1. **Orientação.** Retrato (recomendado: uma mão, curso vertical para o freio) ou paisagem (fiel ao Top Gear, 16:9)? Define resolução, HUD e a viabilidade do gesto de freio.
-2. **"Arrastar o dedo para trás" = arrastar para baixo?** Confirmar essa interpretação do freio.
-3. **Aparelhos de teste.** Quais celulares (iPhone/Android, modelos) você tem? Gestos só valem em aparelho real.
-4. **Vercel.** Há conta Vercel e o repo está conectado ao GitHub? Preferência por Vercel em vez de GitHub Pages?
-5. **Quem faz arte e áudio?** Você, assets CC0/CC-BY, ou contratação? Bloqueia o M4.
-6. **Horas semanais disponíveis.** Sem isso, qualquer prazo é chute; hoje o plano usa só critérios de saída.
-7. **Licença.** Qual é a da `LICENSE` atual, e ela vale também para arte e áudio? Sugestão: código MIT/Apache-2.0, assets em licença separada.
-8. **Nitro.** Manter cargas fixas por corrida (Top Gear) ou preferir barra que recarrega?
-9. **Slogan.** Concorda em corrigir o inglês e manter "Top Gear" só no README?
-10. **Ferramentas.** pnpm ou npm? Biome ou ESLint + Prettier?
-11. **Estilo visual.** Pixel art retrô bem baixa resolução ou 2D limpo? Impacta resolução interna.
-12. **Futuro.** Multiplayer/ranking online entra no roadmap? Mantemos a simulação determinística de qualquer forma.
-13. **Nome.** Confirmar "Ultrashift" como nome final e checar registros de marca e domínios.
+**Ainda em aberto (padrão adotado se não houver resposta)**
+- Nitro: 3 cargas fixas por corrida.
+- Ferramentas: pnpm + Biome.
+- Estilo visual: pixel art retrô de baixa resolução.
+- Slogan: inglês corrigido, "Top Gear" só no README.
+- Vercel como canal de deploy.
+- Nome "Ultrashift": checar marca e domínios antes de lançar.
