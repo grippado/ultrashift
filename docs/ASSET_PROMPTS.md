@@ -43,16 +43,9 @@ Gere uma folha de sprites com 3 quadros lado a lado de um carro rival fictício 
 Gere uma folha de sprites com 3 quadros lado a lado de um carro rival fictício visto por trás: (1) reto, (2) inclinado à esquerda, (3) inclinado à direita. Design: cupê de nariz longo, branco com listras vermelhas. Proporção de cada quadro 3:2. Siga o estilo combinado.
 ```
 
-## Bloco 3 — Efeitos
+## Bloco 3 — Efeitos (NÃO usar; feito em código)
 
-```
-Gere uma folha de sprites de efeitos de corrida, cada quadro numa célula quadrada de grade uniforme, em 4 linhas:
-- Linha 1: chama de nitro saindo do escapamento, 4 quadros (do ciano-branco ao laranja).
-- Linha 2: fumaça de pneu, 4 quadros (nuvem que cresce e some).
-- Linha 3: explosão de faíscas de colisão, 4 quadros.
-- Linha 4: brilho das lanternas de freio, 2 quadros.
-Siga o estilo combinado.
-```
+Testamos um sheet de efeitos gerado pelo ChatGPT e não serviu: chama de perfil com cano do escapamento, fumaça de perfil em tamanhos diferentes, faíscas cortadas, lanternas borradas e grade irregular. Como a câmera fica atrás do carro, a chama e a fumaça vêm na direção do jogador, o que a IA não acerta bem. Nitro, fumaça de pneu/poeira, faíscas de colisão e brilho das lanternas de freio agora são **partículas em pixel desenhadas pelo jogo** (`src/render/fx.ts`), na mesma paleta, e reagem à velocidade e ao freio. Pule este bloco.
 
 ## Bloco 4 — Props de beira de pista
 
