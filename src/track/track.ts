@@ -5,18 +5,20 @@ export interface TrackSegment {
   length: number;
   /** curvature, -1 (left) .. 1 (right); 0 = straight */
   curve: number;
+  /** net elevation change over the segment (world units), eased; all rises must sum to 0 */
+  rise: number;
 }
 
 /** Placeholder layout for the M1 spike; real tracks come later. */
 export const TRACK: readonly TrackSegment[] = [
-  { length: 900, curve: 0 },
-  { length: 700, curve: 0.7 },
-  { length: 500, curve: 0 },
-  { length: 800, curve: -0.9 },
-  { length: 400, curve: 0 },
-  { length: 600, curve: 0.45 },
-  { length: 500, curve: -0.45 },
-  { length: 600, curve: 0 },
+  { length: 900, curve: 0, rise: 0 },
+  { length: 800, curve: 0.7, rise: 420 },
+  { length: 700, curve: 0, rise: -420 },
+  { length: 900, curve: -0.9, rise: 0 },
+  { length: 600, curve: 0, rise: 500 },
+  { length: 700, curve: 0.5, rise: -500 },
+  { length: 600, curve: -0.6, rise: -260 },
+  { length: 700, curve: 0, rise: 260 },
 ];
 
 export const TRACK_LENGTH = TRACK.reduce((n, seg) => n + seg.length, 0);
@@ -46,4 +48,17 @@ export const curvatureAt = (s: number): number => {
     start += seg.length;
   }
   return 0;
+};
+
+/** Road elevation at distance `s` (wraps around the lap). Cumulative eased rises. */
+export const elevationAt = (s: number): number => {
+  const d = ((s % TRACK_LENGTH) + TRACK_LENGTH) % TRACK_LENGTH;
+  let start = 0;
+  let base = 0;
+  for (const seg of TRACK) {
+    if (d < start + seg.length) return base + seg.rise * smoothstep((d - start) / seg.length);
+    start += seg.length;
+    base += seg.rise;
+  }
+  return base;
 };
