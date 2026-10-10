@@ -38,7 +38,7 @@
 - Editor de pistas, gerador procedural, schema ajv, pipeline automático Aseprite para atlas.
 - Teclado, gamepad e mouse completos (só a interface existe; teclado simples opcional em M6 para debug).
 - Capacitor, lojas, Tauri, Steam, itch.io.
-- Multiplayer, ranking online, monetização, telemetria remota.
+- Multiplayer em salas (preparado, ver ADR-004; entra no M7), ranking online, monetização, telemetria remota.
 - Steer assist, curva ^1.4, âncora flutuante, modo de um toque, HUD espelhado.
 
 ## 3. Stack e arquitetura
@@ -235,6 +235,10 @@ Sem estimativas em dias. Cada marco tem critério de saída. Se o Gabriel inform
 | Arte original consome o tempo do dev solo | Placeholders até M4, paleta e escopo de arte fixos |
 | IP e marca ("Top Gear" no slogan; nome "Ultrashift" não checado) | Slogan só no README, `ASSETS.md`, checagem de marca antes de lançar |
 | Burnout em projeto solo | Marcos curtos, sempre com algo jogável e link no ar |
+
+## Multiplayer (futuro próximo)
+
+Pedido do Gabriel: já deixar a base pronta para salas multiplayer via WebSocket. Detalhes no [ADR-004](docs/adr/004-multiplayer-pronto.md). Resumo: simulação pura e compartilhada (`src/sim`), `Intent` por tick como mensagem de rede, tipos do protocolo em `src/net/protocol.ts`, servidor Node + `ws` autoritativo em `server/` depois do M3, cliente com predição do próprio carro e interpolação dos rivais. Entra como **M7 (Salas online)** depois do v0.1.0.
 
 ## 11. Decisões
 
