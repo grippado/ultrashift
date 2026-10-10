@@ -11,7 +11,7 @@ const FORBIDDEN = [
   /\bwindow\b/,
   /\blocalStorage\b/,
 ];
-const DIRS = ["src/sim", "src/shared", "src/net"];
+const DIRS = ["src/sim", "src/shared", "src/net", "src/track"];
 
 describe("pure modules", () => {
   for (const dir of DIRS) {
