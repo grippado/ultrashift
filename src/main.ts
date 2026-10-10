@@ -1,6 +1,7 @@
 import { FixedStepLoop } from "./game/loop";
 import { GestureRecognizer } from "./input/gestures";
 import { attachTouch } from "./input/touch";
+import { frameFor, loadCarSprites } from "./render/sprites";
 import { CAR } from "./shared/tuning";
 import { createState } from "./sim/state";
 import { step } from "./sim/step";
@@ -9,7 +10,9 @@ const canvas = document.getElementById("game") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d");
 if (!ctx) throw new Error("Canvas 2D not available");
 
+const sprites = await loadCarSprites();
 const gestures = new GestureRecognizer();
+let steerView = 0;
 attachTouch(canvas, gestures);
 
 let state = createState();
@@ -17,7 +20,9 @@ let prev = state;
 let now = performance.now();
 const loop = new FixedStepLoop((dt) => {
   prev = state;
-  state = step(state, gestures.sample(now, dt * 1000), dt);
+  const intent = gestures.sample(now, dt * 1000);
+  steerView = intent.steer;
+  state = step(state, intent, dt);
 });
 
 const resize = () => {
@@ -61,10 +66,8 @@ const draw = (alpha: number) => {
   for (let y = -seg * 2 + off; y < h; y += seg * 2) {
     ctx.fillRect(w / 2 - w * 0.01, y, w * 0.02, seg);
   }
-  const size = w * 0.14;
   const cx = w / 2 + x * (roadW / 2);
-  ctx.fillStyle = car.nitroLeft > 0 ? "#19e3ff" : "#ff2fb3";
-  ctx.fillRect(cx - size / 2, h * 0.75, size, size * 0.7);
+  sprites.draw(ctx, "player", frameFor(steerView), cx, h * 0.86, Math.round(w * 0.26));
 
   ctx.fillStyle = "#fff";
   ctx.font = `${Math.round(w * 0.04)}px monospace`;
